@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import Cell, { IMapCell } from "./components/Cell/Cell";
+import Cell from "./components/Cell/Cell";
 import Roomba from "./components/Roomba/Roomba";
 
 interface IRoomba {
@@ -9,21 +9,30 @@ interface IRoomba {
   direction: number;
 }
 
+interface IMapItem {
+  x: number;
+  y: number;
+}
+
 function App() {
-  const [map, setMap] = useState<IMapCell[]>([]);
+  const [map, setMap] = useState<IMapItem[]>([]);
   const [roomba, setRoomba] = useState<IRoomba>({ x: 0, y: 0, direction: 0 });
+  const [obstacles, setObstacles] = useState<number[]>([]);
 
   useEffect(() => {
-    initMap();
-    initRoomba();
+    initGame();
   }, []);
 
   const initRoomba = () => {
     setRoomba({ x: 0, y: 0, direction: 0 });
   };
 
+  const initObstacles = () => {
+    setObstacles([]);
+  };
+
   const initMap = () => {
-    let initialMap: IMapCell[] = [];
+    let initialMap: IMapItem[] = [];
 
     for (let x = 0; x < 10; x++) {
       for (let y = 0; y < 10; y++) {
@@ -35,6 +44,12 @@ function App() {
     }
 
     setMap(initialMap);
+  };
+
+  const initGame = () => {
+    initMap();
+    initRoomba();
+    initObstacles();
   };
 
   const moveRoomba = () => {
@@ -64,7 +79,8 @@ function App() {
       newRoombaProps.x < 0 ||
       newRoombaProps.x > 9 ||
       newRoombaProps.y < 0 ||
-      newRoombaProps.y > 9
+      newRoombaProps.y > 9 ||
+      isObstacle(newRoombaProps.x * 10 + newRoombaProps.y)
     ) {
       isBlocked = true;
     }
@@ -83,21 +99,47 @@ function App() {
     });
   };
 
+  const clickCell = (cellIndex: any) => {
+    console.log(cellIndex);
+    if (obstacles.find((obstacle) => obstacle === cellIndex)) {
+      setObstacles(obstacles.filter((obstacle) => obstacle === cellIndex));
+    } else {
+      setObstacles([...obstacles, cellIndex]);
+    }
+  };
+
+  const isObstacle = (cellIndex: number): boolean => {
+    const obstacle = obstacles.find((obstacle) => obstacle === cellIndex);
+    if (obstacle) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <>
       <div>
-        <button onClick={initMap}>Init Map</button>
+        <button onClick={initGame}>Init Map</button>
         <button onClick={moveRoomba}>Move</button>
         <button onClick={rotateRoomba}>Rotate</button>
       </div>
 
       <div>
         {map &&
-          map.map((mapCell: IMapCell, index) => (
-            <Cell x={mapCell.x} y={mapCell.y} key={index}>
+          map.map((mapCell: IMapItem, index) => (
+            <Cell
+              x={mapCell.x}
+              y={mapCell.y}
+              cellIndex={index}
+              key={index}
+              click={(cellIndex: number) => {
+                clickCell(cellIndex);
+              }}
+            >
               {roomba.x === mapCell.x && roomba.y === mapCell.y ? (
                 <Roomba direction={roomba.direction} />
               ) : null}
+              {isObstacle(index) && "X"}
             </Cell>
           ))}
       </div>
