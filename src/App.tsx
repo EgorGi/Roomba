@@ -60,6 +60,15 @@ function App() {
       }
     }
 
+    if (
+      newRoombaProps.x < 0 ||
+      newRoombaProps.x > 9 ||
+      newRoombaProps.y < 0 ||
+      newRoombaProps.y > 9
+    ) {
+      isBlocked = true;
+    }
+
     if (!isBlocked) {
       setRoomba(newRoombaProps);
     } else {
